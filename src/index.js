@@ -174,6 +174,7 @@ function generateExcel(documents, directoryMap) {
   const begin = moment();
   const aoa = [];
   aoa.push([
+    "Create Data",
     "Doc ID",
     "Doc Folder Route",
     "Doc Name",
@@ -191,6 +192,7 @@ function generateExcel(documents, directoryMap) {
   ]);
   _.each(documents, (document) => {
     aoa.push([
+      moment().format("YYYY/MM/DD hh:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
         "",
