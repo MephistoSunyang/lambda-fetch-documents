@@ -1,0 +1,20 @@
+service: lambda-fetch-documents
+
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+
+plugins:
+  - serverless-webpack
+
+custom:
+  webpack:
+    webpackConfig: "webpack.config.js"
+    includeModules: false
+
+functions:
+  fetchDocuments:
+    handler: src/index.handler

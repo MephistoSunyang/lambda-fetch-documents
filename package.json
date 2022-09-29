@@ -1,0 +1,29 @@
+{
+  "name": "20220915-fetch-data",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "package": "serverless package",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.2",
+    "https-proxy-agent": "^5.0.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "qs": "^6.11.0",
+    "ssh2-sftp-client": "^9.0.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "serverless": "^2.72.3",
+    "serverless-webpack": "^5.10.0",
+    "webpack": "^5.74.0",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
