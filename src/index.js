@@ -174,21 +174,21 @@ function generateExcel(documents, directoryMap) {
   const begin = moment();
   const aoa = [];
   aoa.push([
-    "Create Data",
-    "Doc ID",
-    "Doc Folder Route",
-    "Doc Name",
-    "Creator ID",
-    "Creator Name",
-    "Creator Organization",
-    "Create Time",
-    "Updated Time",
-    "Start",
-    "Read Count",
-    "Comment Count",
-    "Like Count",
-    "Favorite Count",
-    "Recommended At",
+    "CREATE_DATA",
+    "DOC_ID",
+    "DOC_FOLDER_ROUTE",
+    "DOC_NAME",
+    "CREATOR_ID",
+    "CREATOR_NAME",
+    "CREATOR_ORGANIZATION",
+    "CREATE_TIME",
+    "UPDATED_TIME",
+    "START",
+    "READ_COUNT",
+    "COMMENT_COUNT",
+    "LIKE_COUNT",
+    "FAVORITE_COUNT",
+    "RECOMMENDED_AT",
   ]);
   _.each(documents, (document) => {
     aoa.push([
