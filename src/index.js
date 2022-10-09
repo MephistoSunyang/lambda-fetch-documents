@@ -174,7 +174,7 @@ function generateExcel(documents, directoryMap) {
   const begin = moment();
   const aoa = [];
   aoa.push([
-    "CREATE_DATA",
+    "CREATE_DATE",
     "DOC_ID",
     "DOC_FOLDER_ROUTE",
     "DOC_NAME",
