@@ -1,6 +1,5 @@
 const path = require("path");
 const slsw = require("serverless-webpack");
-const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
@@ -11,5 +10,4 @@ module.exports = {
     path: path.resolve(__dirname, ".webpack"),
     filename: "index.js",
   },
-  externals: [nodeExternals()],
 };
