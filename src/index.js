@@ -174,23 +174,25 @@ function generateExcel(documents, directoryMap) {
   const begin = moment();
   const aoa = [];
   aoa.push([
-    "Doc ID",
-    "Doc Folder Route",
-    "Doc Name",
-    "Creator ID",
-    "Creator Name",
-    "Creator Organization",
-    "Create Time",
-    "Updated Time",
-    "Start",
-    "Read Count",
-    "Comment Count",
-    "Like Count",
-    "Favorite Count",
-    "Recommended At",
+    "CREATE_DATE",
+    "DOC_ID",
+    "DOC_FOLDER_ROUTE",
+    "DOC_NAME",
+    "CREATOR_ID",
+    "CREATOR_NAME",
+    "CREATOR_ORGANIZATION",
+    "CREATE_TIME",
+    "UPDATED_TIME",
+    "START",
+    "READ_COUNT",
+    "COMMENT_COUNT",
+    "LIKE_COUNT",
+    "FAVORITE_COUNT",
+    "RECOMMENDED_AT",
   ]);
   _.each(documents, (document) => {
     aoa.push([
+      moment().format("YYYY/MM/DD hh:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
         "",
