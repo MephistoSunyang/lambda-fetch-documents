@@ -10,4 +10,9 @@ module.exports = {
     path: path.resolve(__dirname, ".webpack"),
     filename: "index.js",
   },
+  resolve: {
+    alias: {
+      xlsx: path.resolve(__dirname, "./node_modules/xlsx/xlsx.js"),
+    },
+  },
 };
