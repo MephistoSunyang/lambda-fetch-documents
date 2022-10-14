@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const _ = require("lodash");
 const moment = require("moment");
+const AWS = require("aws-sdk");
 const axios = require("axios");
 const SFTPClient = require("ssh2-sftp-client");
 const HttpsProxyAgent = require("https-proxy-agent");
@@ -15,6 +16,25 @@ const issuer = "https://lxapi.lexiangla.com/cgi-bin";
 const apiIssuer = `${issuer}/v1`;
 
 const isLocal = () => process.env.ENV === "local";
+
+async function loadEnvironmentVariables() {
+  const secretId = process.env.AWS_SECRET_MANAGER_ID;
+  const secretsManager = new AWS.SecretsManager();
+  const result = await secretsManager
+    .getSecretValue({ SecretId: secretId })
+    .promise();
+  if (!result.SecretString) {
+    throw new Error(`Not found SecretString in "${secretId}" secrets manager!`);
+  }
+  try {
+    const secrets = JSON.parse(result.SecretString);
+    _.forIn(secrets, (secret, key) => {
+      process.env[key] = secret;
+    });
+  } catch (err) {
+    throw err;
+  }
+}
 
 function setHttpsProxyAgent() {
   if (process.env.HTTPS_PROXY) {
@@ -242,6 +262,9 @@ async function uploadFile(stream, fileName) {
 exports.handler = async function (event, context) {
   try {
     const begin = moment();
+    if (!isLocal()) {
+      await loadEnvironmentVariables();
+    }
     setHttpsProxyAgent();
     const accessToken = await fetchAccessToken();
     setAuthorization(accessToken);
