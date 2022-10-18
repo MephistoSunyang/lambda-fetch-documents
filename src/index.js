@@ -18,16 +18,20 @@ const apiIssuer = `${issuer}/v1`;
 const isLocal = () => process.env.ENV === "local";
 
 async function loadEnvironmentVariables() {
-  const secretId = process.env.AWS_SECRET_MANAGER_ID;
-  const secretsManager = new AWS.SecretsManager();
+  const region = process.env.AWS_SECRET_MANAGER_REGION;
+  const secretName = process.env.AWS_SECRET_MANAGER_NAME;
+  const secretsManager = new AWS.SecretsManager({region:region});
   const result = await secretsManager
-    .getSecretValue({ SecretId: secretId })
+    .getSecretValue({ SecretId: secretName })
     .promise();
   if (!result.SecretString) {
-    throw new Error(`Not found SecretString in "${secretId}" secrets manager!`);
+    throw new Error(`Not found SecretString in "${secretName}" secrets manager!`);
   }
   try {
     const secrets = JSON.parse(result.SecretString);
+    console.log(
+      `Get secrets successfully! secrets:` + result.SecretString
+    );
     _.forIn(secrets, (secret, key) => {
       process.env[key] = secret;
     });
@@ -89,8 +93,8 @@ async function fetchAllData(url, queries, included = false) {
 
 async function fetchAccessToken() {
   const begin = moment();
-  const appKey = process.env.APP_KEY;
-  const appSecret = process.env.APP_SECRET;
+  const appKey = process.env.Lexiang_Medical_APP_KEY;
+  const appSecret = process.env.Lexiang_Medical_APP_SECRET;
   const params = {
     grant_type: "client_credentials",
     app_key: appKey,
@@ -212,7 +216,7 @@ function generateExcel(documents, directoryMap) {
   ]);
   _.each(documents, (document) => {
     aoa.push([
-      moment().format("YYYY/MM/DD hh:mm:ss"),
+      moment().add(8,"hours").format("YYYY/MM/DD HH:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
         "",
@@ -251,7 +255,8 @@ async function uploadFile(stream, fileName) {
   const username = _.toString(process.env.SFTP_USERNAME);
   const password = _.toString(process.env.SFTP_PASSWORD);
   const filePath = path.join(process.env.SFTP_PATH, fileName);
-  const client = new SFTPClient({ host, port, username, password });
+  const client = new SFTPClient();
+  await client.connect({ host, port, username, password });
   let duration = moment().diff(begin, "milliseconds");
   console.log(`Connected sftp successfully, it cost ${duration} milliseconds!`);
   await client.put(stream, filePath);
@@ -272,7 +277,7 @@ exports.handler = async function (event, context) {
     const directoryMap = await generateDirectoryMap(categoryIds);
     const documents = await fetchDocuments(categoryIds);
     const stream = generateExcel(documents, directoryMap);
-    const fileName = `YEYX_document_${moment().format("YYYYMMDD")}.csv`;
+    const fileName = `YEYX_document_${moment().add(8,"hours").format("YYYYMMDD")}.csv`;
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
