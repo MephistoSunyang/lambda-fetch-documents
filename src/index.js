@@ -20,7 +20,7 @@ const isLocal = () => process.env.ENV === "local";
 async function loadEnvironmentVariables() {
   const region = process.env.AWS_SECRET_MANAGER_REGION;
   const secretName = process.env.AWS_SECRET_MANAGER_NAME;
-  const secretsManager = new AWS.SecretsManager({region:region});
+  const secretsManager = new AWS.SecretsManager({ region: region });
   const result = await secretsManager
     .getSecretValue({ SecretId: secretName })
     .promise();
@@ -30,7 +30,7 @@ async function loadEnvironmentVariables() {
   try {
     const secrets = JSON.parse(result.SecretString);
     console.log(
-      `Get secrets successfully! secrets:` + result.SecretString
+      `Get secrets successfully! `
     );
     _.forIn(secrets, (secret, key) => {
       process.env[key] = secret;
@@ -202,9 +202,9 @@ function generateExcel(documents, directoryMap) {
     "DOC_ID",
     "DOC_FOLDER_ROUTE",
     "DOC_NAME",
-    "CREATOR_ID",
-    "CREATOR_NAME",
-    "CREATOR_ORGANIZATION",
+    //"CREATOR_ID",
+    //"CREATOR_NAME",
+    //"CREATOR_ORGANIZATION",
     "CREATE_TIME",
     "UPDATED_TIME",
     "START",
@@ -216,16 +216,16 @@ function generateExcel(documents, directoryMap) {
   ]);
   _.each(documents, (document) => {
     aoa.push([
-      moment().add(8,"hours").format("YYYY/MM/DD HH:mm:ss"),
+      moment().add(8, "hours").format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
-        "",
+      "",
       _.get(document, "attributes.name"),
-      _.get(document, "relationships.owner.data.id"),
-      _.get(document, "relationships.owner.data.attributes.name"),
-      _.get(document, "relationships.owner.data.attributes.organization"),
-      _.get(document, "attributes.created_at"),
-      _.get(document, "attributes.updated_at"),
+      //_.get(document, "relationships.owner.data.id"),
+      //_.get(document, "relationships.owner.data.attributes.name"),
+      //_.get(document, "relationships.owner.data.attributes.organization"),
+      moment(_.get(document, "attributes.created_at")).format("YYYY-MM-DD HH:mm:ss"),
+      moment(_.get(document, "attributes.updated_at")).format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "attributes.is_star") === 0 ? "No" : "Yes",
       _.get(document, "attributes.read_count"),
       _.get(document, "attributes.comment_count"),
@@ -259,7 +259,12 @@ async function uploadFile(stream, fileName) {
   await client.connect({ host, port, username, password });
   let duration = moment().diff(begin, "milliseconds");
   console.log(`Connected sftp successfully, it cost ${duration} milliseconds!`);
+  const isDelete = await client.delete(filePath,true);
+  console.log(
+    `isDelete:!` + isDelete
+  );
   await client.put(stream, filePath);
+  await client.end();
   duration = moment().diff(begin, "milliseconds");
   console.log(`Uploaded file successfully, it cost ${duration} milliseconds!`);
 }
@@ -277,7 +282,7 @@ exports.handler = async function (event, context) {
     const directoryMap = await generateDirectoryMap(categoryIds);
     const documents = await fetchDocuments(categoryIds);
     const stream = generateExcel(documents, directoryMap);
-    const fileName = `YEYX_document_${moment().add(8,"hours").format("YYYYMMDD")}.csv`;
+    const fileName = `YEYX_document_${moment().add(8, "hours").format("YYYYMMDD")}.csv`;
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
