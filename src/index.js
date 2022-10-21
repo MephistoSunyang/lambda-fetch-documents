@@ -286,6 +286,7 @@ exports.handler = async function (event, context) {
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
+      //添加重试机制
       await uploadFile(stream, fileName);
     }
     const duration = moment().diff(begin, "seconds");
@@ -306,3 +307,12 @@ exports.handler = async function (event, context) {
 if (isLocal()) {
   this.handler();
 }
+
+
+//2022-10-20T17:02:00.043Z	9e2c313a-016e-4744-95b7-44f91e458a3c	ERROR	Exception occurred:  
+//{
+//    "stack": "Error: connect: getConnection: Timed out while waiting for handshake\n    at e.exports.fmtError (/var/task/index.js:2:875138)\n    at e.exports.connect (/var/task/index.js:2:876785)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async /var/task/index.js:2:1874087\n    at async Runtime.t.handler (/var/task/index.js:2:1873855)",
+//    "message": "connect: getConnection: Timed out while waiting for handshake",
+//    "code": "ERR_GENERIC_CLIENT",
+//    "custom": true
+//}
