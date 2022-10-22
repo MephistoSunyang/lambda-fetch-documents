@@ -25,13 +25,13 @@ async function loadEnvironmentVariables() {
     .getSecretValue({ SecretId: secretName })
     .promise();
   if (!result.SecretString) {
-    throw new Error(`Not found SecretString in "${secretName}" secrets manager!`);
+    throw new Error(
+      `Not found SecretString in "${secretName}" secrets manager!`
+    );
   }
   try {
     const secrets = JSON.parse(result.SecretString);
-    console.log(
-      `Get secrets successfully! `
-    );
+    console.log(`Get secrets successfully! `);
     _.forIn(secrets, (secret, key) => {
       process.env[key] = secret;
     });
@@ -219,13 +219,17 @@ function generateExcel(documents, directoryMap) {
       moment().add(8, "hours").format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
-      "",
+        "",
       _.get(document, "attributes.name"),
       //_.get(document, "relationships.owner.data.id"),
       //_.get(document, "relationships.owner.data.attributes.name"),
       //_.get(document, "relationships.owner.data.attributes.organization"),
-      moment(_.get(document, "attributes.created_at")).format("YYYY-MM-DD HH:mm:ss"),
-      moment(_.get(document, "attributes.updated_at")).format("YYYY-MM-DD HH:mm:ss"),
+      moment(_.get(document, "attributes.created_at")).format(
+        "YYYY-MM-DD HH:mm:ss"
+      ),
+      moment(_.get(document, "attributes.updated_at")).format(
+        "YYYY-MM-DD HH:mm:ss"
+      ),
       _.get(document, "attributes.is_star") === 0 ? "No" : "Yes",
       _.get(document, "attributes.read_count"),
       _.get(document, "attributes.comment_count"),
@@ -259,10 +263,7 @@ async function uploadFile(stream, fileName) {
   await client.connect({ host, port, username, password });
   let duration = moment().diff(begin, "milliseconds");
   console.log(`Connected sftp successfully, it cost ${duration} milliseconds!`);
-  const isDelete = await client.delete(filePath,true);
-  console.log(
-    `isDelete:!` + isDelete
-  );
+  await client.delete(filePath, true);
   await client.put(stream, filePath);
   await client.end();
   duration = moment().diff(begin, "milliseconds");
@@ -282,12 +283,24 @@ exports.handler = async function (event, context) {
     const directoryMap = await generateDirectoryMap(categoryIds);
     const documents = await fetchDocuments(categoryIds);
     const stream = generateExcel(documents, directoryMap);
-    const fileName = `YEYX_document_${moment().add(8, "hours").format("YYYYMMDD")}.csv`;
+    const fileName = `YEYX_document_${moment()
+      .add(8, "hours")
+      .format("YYYYMMDD")}.csv`;
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
-      //添加重试机制
-      await uploadFile(stream, fileName);
+      let index = 0;
+      try {
+        //添加重试机制
+        await uploadFile(stream, fileName);
+      } catch (err) {
+        if (index < 3) {
+          index++;
+          await uploadFile(stream, fileName);
+        } else {
+          throw err;
+        }
+      }
     }
     const duration = moment().diff(begin, "seconds");
     console.log(`Handler execution successfully, it cost ${duration} seconds!`);
@@ -307,12 +320,3 @@ exports.handler = async function (event, context) {
 if (isLocal()) {
   this.handler();
 }
-
-
-//2022-10-20T17:02:00.043Z	9e2c313a-016e-4744-95b7-44f91e458a3c	ERROR	Exception occurred:  
-//{
-//    "stack": "Error: connect: getConnection: Timed out while waiting for handshake\n    at e.exports.fmtError (/var/task/index.js:2:875138)\n    at e.exports.connect (/var/task/index.js:2:876785)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)\n    at async /var/task/index.js:2:1874087\n    at async Runtime.t.handler (/var/task/index.js:2:1873855)",
-//    "message": "connect: getConnection: Timed out while waiting for handshake",
-//    "code": "ERR_GENERIC_CLIENT",
-//    "custom": true
-//}
