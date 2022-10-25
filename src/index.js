@@ -11,6 +11,7 @@ const HttpsProxyAgent = require("https-proxy-agent");
 const qs = require("qs");
 const xlsx = require("xlsx");
 const { asyncPool, getErrorMessage } = require("./utils");
+const { env } = require("process");
 
 const issuer = "https://lxapi.lexiangla.com/cgi-bin";
 const apiIssuer = `${issuer}/v1`;
@@ -25,13 +26,13 @@ async function loadEnvironmentVariables() {
     .getSecretValue({ SecretId: secretName })
     .promise();
   if (!result.SecretString) {
-    throw new Error(
-      `Not found SecretString in "${secretName}" secrets manager!`
-    );
+    throw new Error(`Not found SecretString in "${secretName}" secrets manager!`);
   }
   try {
     const secrets = JSON.parse(result.SecretString);
-    console.log(`Get secrets successfully! `);
+    console.log(
+      `Get secrets successfully! `
+    );
     _.forIn(secrets, (secret, key) => {
       process.env[key] = secret;
     });
@@ -219,17 +220,13 @@ function generateExcel(documents, directoryMap) {
       moment().add(8, "hours").format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
-        "",
+      "",
       _.get(document, "attributes.name"),
       //_.get(document, "relationships.owner.data.id"),
       //_.get(document, "relationships.owner.data.attributes.name"),
       //_.get(document, "relationships.owner.data.attributes.organization"),
-      moment(_.get(document, "attributes.created_at")).format(
-        "YYYY-MM-DD HH:mm:ss"
-      ),
-      moment(_.get(document, "attributes.updated_at")).format(
-        "YYYY-MM-DD HH:mm:ss"
-      ),
+      moment(_.get(document, "attributes.created_at")).format("YYYY-MM-DD HH:mm:ss"),
+      moment(_.get(document, "attributes.updated_at")).format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "attributes.is_star") === 0 ? "No" : "Yes",
       _.get(document, "attributes.read_count"),
       _.get(document, "attributes.comment_count"),
@@ -263,7 +260,7 @@ async function uploadFile(stream, fileName) {
   await client.connect({ host, port, username, password });
   let duration = moment().diff(begin, "milliseconds");
   console.log(`Connected sftp successfully, it cost ${duration} milliseconds!`);
-  await client.delete(filePath, true);
+  const isDelete = await client.delete(filePath,true);
   await client.put(stream, filePath);
   await client.end();
   duration = moment().diff(begin, "milliseconds");
@@ -283,19 +280,19 @@ exports.handler = async function (event, context) {
     const directoryMap = await generateDirectoryMap(categoryIds);
     const documents = await fetchDocuments(categoryIds);
     const stream = generateExcel(documents, directoryMap);
-    const fileName = `YEYX_document_${moment()
-      .add(8, "hours")
-      .format("YYYYMMDD")}.csv`;
+    const fileName = `YEYX_document_${moment().add(8, "hours").format("YYYYMMDD")}.csv`;
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
       let index = 0;
       try {
-        //添加重试机制
         await uploadFile(stream, fileName);
       } catch (err) {
-        if (index < 3) {
+        if (index < process.env.UPLOADFIEL_TRY_INDEX) {
           index++;
+          console.log(
+            `UploadFile Try Index:` + index
+          );
           await uploadFile(stream, fileName);
         } else {
           throw err;
