@@ -217,7 +217,7 @@ function generateExcel(documents, directoryMap) {
   ]);
   _.each(documents, (document) => {
     aoa.push([
-      moment().add(8, "hours").format("YYYY-MM-DD HH:mm:ss"),
+      moment().format("YYYY-MM-DD HH:mm:ss"),
       _.get(document, "id"),
       directoryMap.get(_.get(document, "relationships.directory.data.id")) ??
       "",
@@ -280,7 +280,7 @@ exports.handler = async function (event, context) {
     const directoryMap = await generateDirectoryMap(categoryIds);
     const documents = await fetchDocuments(categoryIds);
     const stream = generateExcel(documents, directoryMap);
-    const fileName = `YEYX_document_${moment().add(8, "hours").format("YYYYMMDD")}.csv`;
+    const fileName = `YEYX_document_${moment().format("YYYYMMDD")}.csv`;
     if (isLocal()) {
       saveFile(stream, fileName);
     } else {
